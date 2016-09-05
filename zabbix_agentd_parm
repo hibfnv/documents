@@ -1,0 +1,4 @@
+LogFile=/tmp/zabbix_agentd.log
+Server=10.68.64.103
+ServerActive=127.0.0.1
+Hostname=Zabbix server

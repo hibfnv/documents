@@ -1,0 +1,5 @@
+LogFile=/tmp/zabbix_server.log
+DBName=zabbix
+DBUser=zabbix
+DBPassword=zabbix
+ListenIP=10.68.64.103
