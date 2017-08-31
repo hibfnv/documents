@@ -1,0 +1,69 @@
+Zookeeper 有三种运行模式：单机模式、伪集群模式和集群模式。
+单机模式
+
+单机模式,顾名思义,只有一个zookeeper实例,我们安装完成并且启动zk,就是一个单机模式.
+具体步骤和上一篇博客zookeeper的安装过程类似.
+1. 首先保证已安装Java运行环境
+2. 下载ZooKeeper安装包,可以去ZooKpper官网下载最新的Stable版本,并解压到指定目录
+3. 配置zoo.cfg 解压成功后,在conf文件夹下复制一份新的zoo_sample.cfg并重新命名为zoo.cfg
+
+tickTime=2000
+initLimit=10
+syncLimit=5
+dataDir=/var/zookeeper
+clientPort=2181
+
+启动服务
+这样一个单机模式的ZooKeeper就配置完成了
+集群模式
+
+一个ZooKeeper集群通常由一组ZooKeeper实例组成,一般3台以上就可以组成一个可用的ZooKeeper集群了.
+组成 ZooKeeper 集群的每台机器都会在内存中维护当前的服务器状态,并且每台机器之间都会互相保持通信.重要的一点是,只要集群中存在超过一半的机器能够正常工作,那么整个集群就能够正常对外服务.
+在配置集群模式之前,需要准备三台服务器,我这里使用的虚拟机上的cnteos7,IP地址分别为
+192.168.134.128
+192.168.134.129
+192.168.134.130.
+其他步骤同单机模式,只是在配置zoo.cfg上有所不同,下面具体介绍:
+集群模式下zoo.cfg的配置:
+
+tickTime=2000
+initLimit=10
+syncLimit=5
+dataDir=/var/zookeeper
+clientPort=2181
+server.1=192.168.134.128:2888:3888
+server.2=192.168.134.129:2888:3888
+server.1=192.168.134.130:2888:3888
+
+可以看到,相比于单机模式,集群模式多了server.id=host:port1:port2 的配置.其中,id被称为server ID,用来标识该机器在集群中的机器序号(需要在每台机器的dataDir目录下创建myid文件,文件内容即为该机器对应的Server ID数字).host为机器IP,port1用于指定Follower服务器与Leader服务器进行通信和数据同步的端口,port2用于进行Leader选举过程中的投票通信.
+
+然后创建myid文件
+在dataDir指定的目录下创建名为myid文件,在第一行写上对应的Server ID.比如如下配置server.1=192.168.134.128:2888:3888,就在myid的文件第一行写上1,具体如下
+
+[root@localhost var]# cd /
+[root@localhost /]# cd /var/
+[root@localhost var]# mkdir zookeeper
+[root@localhost var]# cd zookeeper/
+[root@localhost zookeeper]# vi myid #写入Server ID
+[root@localhost zookeeper]# cat myid
+
+
+最后就是按照相同步骤配置其他两台服务器,然后启动服务.
+这样,整个集群模式就搭建完成
+伪集群模式
+
+这是一种特殊的集群模式,即集群的所有服务器都部署在一台机器上.
+这种模式下,只需要把zoo.cfg做如下修改
+
+tickTime=2000
+initLimit=10
+syncLimit=5
+dataDir=/var/zookeeper
+clientPort=2181
+server.1=192.168.134.128:2888:3888
+server.2=192.168.134.128:2888:3888
+server.1=192.168.134.128:2888:3888
+
+
+
+启动服务即可.
