@@ -1,0 +1,51 @@
+操作系统：CentOS 7.2
+软件包：HBase 1.2.4
+
+一、修改配置文件
+
+1、hbase-env.sh 配置JAVA_HOME
+2、hbase-site.xml
+
+<property>
+    <name>hbase.rootdir</name>
+    <value>hdfs://127.0.0.1:8020/hbase</value>
+</property>
+<property>
+    <name>hbase.zookeeper.property.dataDir</name>
+    <value>/usr/big/zdata</value>
+</property>
+
+
+//伪分布式必需使用下面属性
+<property>
+    <name>hbase.cluster.distributed</name>
+    <value>true</value>
+</property>
+
+3、regionservers文件
+修改为ip地址
+
+二、启动HBase
+
+1、每次启动系统，需要的启动命令，顺序不能变
+
+hadoop/sbin/start-dfs.sh
+hadoop/sbin/start-yarn.sh
+hbase/bin/hbase-daemon.sh start zookeeper
+hbase/bin/hbase-daemon.sh start master
+hbase/bin/hbase-daemon.sh start regionserver
+
+2、web端访问： http://127.0.0.1:60010
+
+三、基本操作命令
+
+./hbase shell
+create 'user','info'
+list
+put 'user','rk0001','info:name','guoguo'
+scan 'user'
+get 'user','rk0001'
+deleteall 'user','rk0001'
+
+
+在shell下删除使用 Ctrl + Backspace
