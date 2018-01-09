@@ -1,0 +1,3 @@
+declare @name varchar(250)
+set @name ='D:\MenJin_Backup\MenJinDB_'+CONVERT(varchar(50),getdate(),112)+'.bak'
+backup database MenJin TO DISK = @name;
