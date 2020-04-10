@@ -1,0 +1,12 @@
+[Unit]
+Description=Tomcat8
+After=syslog.target network.target remote-fs.target nss-lookup.target
+
+[Service]
+Type=forking
+ExecStart=/bin/bash /usr/local/tomcat/bin/startup.sh
+ExecStop=/bin/bash /usr/local/tomcat/bin/shutdown.sh
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

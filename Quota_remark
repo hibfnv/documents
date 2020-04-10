@@ -1,0 +1,636 @@
+QUOTA(1)                      General Commands Manual                     QUOTA(1)
+
+
+
+NAME
+       quota - display disk usage and limits
+
+SYNOPSIS
+       quota [ -F format-name ] [ -guqvswi ] [ -l | [ -QAm ]]
+       quota [ -F format-name ] [ -qvswi ] [ -l | [ -QAm ]] -u user...
+       quota [ -F format-name ] [ -qvswi ] [ -l | [ -QAm ]] -g group...
+       quota [ -F format-name ] [ -qvswugQm ] -f filesystem...
+
+DESCRIPTION
+       quota displays users' disk usage and limits.  By default only the user quo‐
+       tas are printed.
+
+       quota reports the quotas of all the filesystems listed in  /etc/mtab.   For
+       filesystems  that  are  NFS-mounted a call to the rpc.rquotad on the server
+       machine is performed to get the information.
+
+OPTIONS
+       -F, --format=format-name
+              Show quota for specified format (ie. don't perform format autodetec‐
+              tion).  Possible format names are: vfsold Original quota format with
+              16-bit UIDs / GIDs, vfsv0 Quota format  with  32-bit  UIDs  /  GIDs,
+              64-bit  space usage, 32-bit inode usage and limits, vfsv1 Quota for‐
+              mat with 64-bit quota limits and usage, rpc (quota  over  NFS),  xfs
+              (quota on XFS filesystem)
+
+       -g, --group
+              Print group quotas for the group of which the user is a member.  The
+              optional group argument(s) restricts the display  to  the  specified
+              group(s).
+
+       -u, --user
+              flag is equivalent to the default.
+
+       -v, --verbose
+              will display quotas on filesystems where no storage is allocated.
+
+       -s, --human-readable
+              option  will  make  quota(1) try to choose units for showing limits,
+              used space and used inodes.
+
+       --always-resolve
+              Always try to translate user / group name to uid / gid even  if  the
+              name is composed of digits only.
+
+       -p, --raw-grace
+              When  user  is  in  grace period, report time in seconds since epoch
+              when his grace time runs out (or has run out). Field is '0' when  no
+              grace  time  is  in  effect.  This is especially useful when parsing
+              output by a script.
+
+       -i, --no-autofs
+              ignore mountpoints mounted by automounter
+
+       -l, --local-only
+              report quotas only on local  filesystems  (ie.  ignore  NFS  mounted
+              filesystems).
+
+       -A, --all-nfs
+              report  quotas  for all NFS filesystems even if they report to be on
+              the same device.
+
+       -f, --filesystem-list
+              report quotas only for filesystems specified on command line.
+
+       -m, --no-mixed-pathnames
+              Currently, pathnames of NFSv4 mountpoints are sent  without  leading
+              slash  in the path.  rpc.rquotad uses this to recognize NFSv4 mounts
+              and properly prepend pseudoroot of NFS filesystem to  the  path.  If
+              you specify this option, quota will always send paths with a leading
+              slash. This can be useful for legacy reasons but be aware that quota
+              over RPC will stop working if you are using new rpc.rquotad.
+
+       -q, --quiet
+              Print  a more terse message, containing only information on filesys‐
+              tems where usage is over quota.
+
+       -Q, --quiet-refuse
+              Do not print error message if connection to rpc.rquotad  is  refused
+              (usually  this  happens  when  rpc.rquotad  is  not  running  on the
+              server).
+
+       -w, --no-wrap
+              Do not wrap the line if the device name is too  long.  This  can  be
+              useful when parsing the output of quota(1) by a script.
+
+       --show-mntpoint
+              Show also mount point as a filesystem identification.
+
+       --hide-device
+              Do not show device name in a filesystem identification.
+
+       Specifying  both -g and -u displays both the user quotas and the group quo‐
+       tas (for the user).
+
+       Only the super-user may use the -u flag and the optional user  argument  to
+       view  the  limits  of other users.  Non-super-users can use the the -g flag
+       and optional group argument to view only the limits of groups of which they
+       are members.
+
+       The -q flag takes precedence over the -v flag.
+
+DIAGNOSTICS
+       If  quota  exits  with  a non-zero status, one or more filesystems are over
+       quota.
+
+FILES
+       aquota.user  or  aquota.group
+                           quota file at the filesystem  root  (version  2  quota,
+                           non-XFS filesystems)
+       quota.user  or  quota.group
+                           quota  file  at  the  filesystem root (version 1 quota,
+                           non-XFS filesystems)
+       /etc/mtab           default filesystems
+
+SEE ALSO
+       quotactl(2), fstab(5), edquota(8), quotacheck(8), quotaon(8), quota_nld(8),
+       repquota(8), warnquota(8), setquota(8)
+
+
+
+                                                                          QUOTA(1)
+quotacheck(8)                 System Manager's Manual                quotacheck(8)
+
+
+
+NAME
+       quotacheck  -  scan  a  filesystem for disk usage, create, check and repair
+       quota files
+
+SYNOPSIS
+       quotacheck [ -gubcfinvdMmR ] [ -F quota-format ] -a | filesystem
+
+DESCRIPTION
+       quotacheck examines each filesystem, builds a table of current disk  usage,
+       and  compares  this  table against that recorded in the disk quota file for
+       the filesystem (this step is omitted if option -c  is  specified).  If  any
+       inconsistencies  are  detected,  both the quota file and the current system
+       copy of the incorrect quotas are updated (the  latter  only  occurs  if  an
+       active  filesystem is checked which is not advised).  By default, only user
+       quotas are checked.  quotacheck expects each filesystem to  be  checked  to
+       have quota files named [a]quota.user and [a]quota.group located at the root
+       of the associated filesystem.  If a file is not  present,  quotacheck  will
+       create it.
+
+       If  the  quota  file is corrupted, quotacheck tries to save as much data as
+       possible.  Rescuing data may need user  intervention.  With  no  additional
+       options  quotacheck  will simply exit in such a situation. When in interac‐
+       tive mode (option -i) , the user is asked for advice. Advice  can  also  be
+       provided  from  command  line  (see  option -n) , which is useful when quo‐
+       tacheck is run automatically (ie. from script) and failure is unacceptable.
+
+       quotacheck should be run each time the system boots  and  mounts  non-valid
+       filesystems.  This is most likely to happen after a system crash.
+
+       It is strongly recommended to run quotacheck with quotas turned off for the
+       filesystem. Otherwise, possible damage or loss to data in the  quota  files
+       can  result.   It  is also unwise to run quotacheck on a live filesystem as
+       actual usage may change during the scan.  To prevent this, quotacheck tries
+       to  remount  the  filesystem read-only before starting the scan.  After the
+       scan is done it remounts the filesystem read-write. You  can  disable  this
+       with option -m.  You can also make quotacheck ignore the failure to remount
+       the filesystem read-only with option -M.
+
+OPTIONS
+       -b, --backup
+              Forces quotacheck to make backups of the quota file  before  writing
+              the new data.
+
+       -v, --verbose
+              quotacheck  reports  its  operation  as  it progresses.  Normally it
+              operates silently.  If the option is specified twice, also the  cur‐
+              rent directory is printed (note that printing can slow down the scan
+              measurably).
+
+       -d, --debug
+              Enable debugging mode.  It will result in a lot of information which
+              can be used in debugging the program. The output is very verbose and
+              the scan will be slow.
+
+       -u, --user
+              Only user quotas listed in /etc/mtab or on the filesystems specified
+              are to be checked.  This is the default action.
+
+       -g, --group
+              Only  group  quotas listed in /etc/mtab or on the filesystems speci‐
+              fied are to be checked.
+
+       -c, --create-files
+              Don't read existing quota files. Just perform a new scan and save it
+              to  disk.   quotacheck  also  skips scanning of old quota files when
+              they are not found.
+
+       -f, --force
+              Forces checking and writing of new quota files on  filesystems  with
+              quotas  enabled.  This is not recommended as the created quota files
+              may be out of sync.
+
+       -M, --try-remount
+              This flag forces checking of filesystem  in  read-write  mode  if  a
+              remount  fails. Do this only when you are sure no process will write
+              to a filesystem while scanning.
+
+       -m, --no-remount
+              Don't try to remount filesystem read-only. See comment  with  option
+              -M.
+
+       -i, --interactive
+              Interactive  mode.  By  default  quotacheck  exits  when it finds an
+              error. In interactive mode user is asked  for  input  instead.   See
+              option -n.
+
+       -n, --use-first-dquot
+              If  the  quota  files become corrupted, it is possible for duplicate
+              entries for a single user or group ID to exist.   Normally  in  this
+              case,  quotacheck  exits or asks user for input. When this option is
+              set, the first entry found is always  used  (this  option  works  in
+              interactive mode too).
+
+       -F, --format=format-name
+              Check  and  fix  quota  files of specified format (ie. don't perform
+              format auto-detection). This is recommended as detection  might  not
+              work  well  on  corrupted  quota  files.  Possible format names are:
+              vfsold Original quota format with 16-bit UIDs /  GIDs,  vfsv0  Quota
+              format  with  32-bit  UIDs  / GIDs, 64-bit space usage, 32-bit inode
+              usage and limits, vfsv1 Quota format with 64-bit  quota  limits  and
+              usage, rpc (quota over NFS), xfs (quota on XFS filesystem)
+
+       -a, --all
+              Check all mounted non-NFS filesystems in /etc/mtab
+
+       -R, --exclude-root
+              When  used  together  with the -a option, all filesystems except for
+              the root filesystem are checked for quotas.
+
+
+NOTE
+       quotacheck should only be run by super-user. Non-privileged users are  pre‐
+       sumably not allowed to read all the directories on the given filesystem.
+
+
+SEE ALSO
+       quota(1),  quotactl(2), fstab(5), quotaon(8), repquota(8), convertquota(8),
+       setquota(8), edquota(8), fsck(8), efsck(8), e2fsck(8), xfsck(8)
+
+
+FILES
+       aquota.user or aquota.group
+                      located at filesystem root with  quotas  (version  2  quota,
+                      non-XFS filesystems)
+       quota.user or quota.group
+                      located  at  filesystem  root  with quotas (version 1 quota,
+                      non-XFS filesystems)
+       /etc/mtab      names and locations of mounted filesystems
+AUTHOR
+       Jan Kara <jack@suse.cz>
+       Based on old quotacheck by:
+       Edvard Tuinder <ed@elm.net>
+       Marco van Wieringen <mvw@planets.elm.net>
+
+
+
+                                  Fri Jul 20 2001                    quotacheck(8)
+QUOTAON(8)                    System Manager's Manual                   QUOTAON(8)
+
+
+
+NAME
+       quotaon, quotaoff - turn filesystem quotas on and off
+
+SYNOPSIS
+       /usr/sbin/quotaon [ -vugfp ] [ -F format-name ] filesystem...
+       /usr/sbin/quotaon [ -avugfp ] [ -F format-name ]
+
+       /usr/sbin/quotaoff [ -vugp ] [ -x state ] filesystem...
+       /usr/sbin/quotaoff [ -avugp ]
+
+DESCRIPTION
+   quotaon
+       quotaon  announces  to the system that disk quotas should be enabled on one
+       or more filesystems. The filesystem quota files must be present in the root
+       directory  of the specified filesystem and be named either aquota.user (for
+       version 2 user quota), quota.user (for version 1 user quota),  aquota.group
+       (for version 2 group quota), or quota.group (for version 1 group quota).
+
+       XFS  filesystems  are  a  special case - XFS considers quota information as
+       filesystem metadata and uses journaling to provide a higher level guarantee
+       of  consistency.   There  are  two components to the XFS disk quota system:
+       accounting and limit  enforcement.   XFS  filesystems  require  that  quota
+       accounting  be  turned on at mount time.  It is possible to enable and dis‐
+       able limit enforcement on an  XFS  filesystem  after  quota  accounting  is
+       already  turned on.  The default is to turn on both accounting and enforce‐
+       ment.
+
+       The XFS quota implementation does not maintain quota information  in  user-
+       visible files, but rather stores this information internally.
+
+   quotaoff
+       quotaoff announces to the system that the specified filesystems should have
+       any disk quotas turned off.
+
+OPTIONS
+   quotaon
+       -F, --format=format-name
+              Report quota for specified format (ie. don't perform format  autode‐
+              tection).   Possible  format names are: vfsold Original quota format
+              with 16-bit UIDs / GIDs, vfsv0 Quota format with 32-bit UIDs / GIDs,
+              64-bit  space usage, 32-bit inode usage and limits, vfsv1 Quota for‐
+              mat with 64-bit quota limits and usage, xfs (quota on  XFS  filesys‐
+              tem)
+
+       -a, --all
+              All  automatically mounted (no noauto option) non-NFS filesystems in
+              /etc/fstab with quotas will have their quotas turned  on.   This  is
+              normally used at boot time to enable quotas.
+
+       -v, --verbose
+              Display a message for each filesystem where quotas are turned on.
+
+       -u, --user
+              Manipulate user quotas. This is the default.
+
+       -g, --group
+              Manipulate group quotas.
+
+       -p, --print-state
+              Instead  of  turning  quotas  on  just  print  state  of quotas (ie.
+              whether. quota is on or off)
+
+       -x, --xfs-command enforce
+              Switch on limit enforcement for XFS filesystems. This is the default
+              action  for  any  XFS  filesystem. This option is only applicable to
+              XFS, and is silently ignored for other filesystem types.
+
+       -f, --off
+              Make quotaon behave like being called as quotaoff.
+
+   quotaoff
+       -F, --format=format-name
+              Report quota for specified format (ie. don't perform format  autode‐
+              tection).   Possible  format  names  are:  vfsold (version 1 quota),
+              vfsv0 (version 2 quota), xfs (quota on XFS filesystem)
+
+       -a, --all
+              Force all filesystems in /etc/fstab to have their quotas disabled.
+
+       -v, --verbose
+              Display a message for each filesystem affected.
+
+       -u, --user
+              Manipulate user quotas. This is the default.
+
+       -g, --group
+              Manipulate group quotas.
+
+       -p, --print-state
+              Instead of turning quotas  off  just  print  state  of  quotas  (ie.
+              whether. quota is on or off)
+
+       -x, --xfs-command delete
+              Free  up the space used to hold quota information (maintained inter‐
+              nally) within XFS.  This option is only applicable to  XFS,  and  is
+              silently ignored for other filesystem types.  It can only be used on
+              a filesystem with quota previously turned off.
+
+       -x, --xfs-command enforce
+              Switch off limit enforcement  for  XFS  filesystems  (perform  quota
+              accounting only). This is the default action for any XFS filesystem.
+              This option is only applicable to XFS, and is silently  ignored  for
+              other filesystem types.
+
+       -x, --xfs-command account
+              This  option can be used to disable quota accounting. It is not pos‐
+              sible to enable quota accounting by quota tools.  Use  mount(8)  for
+              that.  This  option  is  only  applicable to XFS filesystems, and is
+              silently ignored for other filesystem types.
+
+NOTES ON XFS FILESYSTEMS
+       To enable quotas on an XFS filesystem, use  mount(8)  or  /etc/fstab  quota
+       option  to  enable  both accounting and limit enforcement.  quotaon utility
+       cannot be used for this purpose.
+
+       Turning on quotas on an  XFS  root  filesystem  requires  the  quota  mount
+       options  be passed into the kernel at boot time through the Linux rootflags
+       boot option.
+
+       To turn off quota limit enforcement on any XFS filesystem, first make  sure
+       that  quota accounting and enforcement are both turned on using repquota -v
+       filesystem.  Then, use quotaoff -v filesystem to disable limit enforcement.
+       This may be done while the filesystem is mounted.
+
+       Turning  on  quota limit enforcement on an XFS filesystem is achieved using
+       quotaon -v filesystem.  This may be done while the filesystem is mounted.
+
+FILES
+       aquota.user or aquota.group
+                           quota file at the filesystem  root  (version  2  quota,
+                           non-XFS filesystems)
+       quota.user or quota.group
+                           quota  file  at  the  filesystem root (version 1 quota,
+                           non-XFS filesystems)
+       /etc/fstab          default filesystems
+
+SEE ALSO
+       quotactl(2), fstab(5), quota_nld(8), repquota(8), warnquota(8)
+
+
+
+4th Berkeley Distribution                                               QUOTAON(8)
+EDQUOTA(8)                    System Manager's Manual                   EDQUOTA(8)
+
+
+
+NAME
+       edquota - edit user quotas
+
+SYNOPSIS
+       edquota  [  -p  protoname  ]  [  -u |  -g ] [ -rm ] [ -F format-name ] [ -f
+       filesystem ] username...
+
+       edquota [ -u | -g ] [ -F format-name ] [ -f filesystem ] -t
+
+       edquota [ -u | -g ] [ -F format-name ] [  -f  filesystem  ]  -T  username |
+       groupname...
+
+DESCRIPTION
+       edquota is a quota editor.  One or more users or groups may be specified on
+       the command line. If a number is given in the place of user/group  name  it
+       is  treated  as an UID/GID. For each user or group a temporary file is cre‐
+       ated with an ASCII representation of the current disk quotas for that  user
+       or group and an editor is then invoked on the file.  The quotas may then be
+       modified, new quotas added, etc.  Setting a quota to zero indicates that no
+       quota should be imposed.
+
+       Block  usage  and  limits  are  reported  and  interpereted as multiples of
+       kibibyte (1024 bytes) blocks by default. Symbols K, M,  G,  and  T  can  be
+       appended  to  numeric value to express kibibytes, mebibytes, gibibytes, and
+       tebibytes.
+
+       Inode usage and limits are interpreted literally. Symbols k, m,  g,  and  t
+       can  be appended to numeric value to express multiples of 10^3, 10^6, 10^9,
+       and 10^12 inodes.
+
+       Users are permitted to exceed their soft limits for a grace period that may
+       be  specified  per filesystem.  Once the grace period has expired, the soft
+       limit is enforced as a hard limit.
+
+       The current usage information in the file is  for  informational  purposes;
+       only the hard and soft limits can be changed.
+
+       Upon  leaving the editor, edquota reads the temporary file and modifies the
+       binary quota files to reflect the changes made.
+
+       The editor invoked is vi(1) unless either the EDITOR or the VISUAL environ‐
+       ment variable specifies otherwise.
+
+       Only the super-user may edit quotas.
+
+OPTIONS
+       -r, --remote
+              Edit  also  non-local  quota use rpc.rquotad on remote server to set
+              quota.  This option is available only if quota tools  were  compiled
+              with  enabled support for setting quotas over RPC.  The -n option is
+              equivalent, and is maintained for backward compatibility.
+
+       -m, --no-mixed-pathnames
+              Currently, pathnames of NFSv4 mountpoints are sent  without  leading
+              slash  in the path.  rpc.rquotad uses this to recognize NFSv4 mounts
+              and properly prepend pseudoroot of NFS filesystem to  the  path.  If
+              you specify this option, edquota will always send paths with a lead‐
+              ing slash. This can be useful for legacy reasons but be  aware  that
+              quota over RPC will stop working if you are using new rpc.rquotad.
+
+       -u, --user
+              Edit the user quota. This is the default.
+
+       -g, --group
+              Edit the group quota.
+
+       -p, --prototype=protoname
+              Duplicate  the  quotas  of  the prototypical user specified for each
+              user specified.  This is the normal  mechanism  used  to  initialize
+              quotas for groups of users.
+
+       --always-resolve
+              Always  try  to translate user / group name to uid / gid even if the
+              name is composed of digits only.
+
+       -F, --format=format-name
+              Edit quota for specified format (ie. don't perform format autodetec‐
+              tion).  Possible format names are: vfsold Original quota format with
+              16-bit UIDs / GIDs, vfsv0 Quota format  with  32-bit  UIDs  /  GIDs,
+              64-bit  space usage, 32-bit inode usage and limits, vfsv1 Quota for‐
+              mat with 64-bit quota limits and usage, rpc (quota  over  NFS),  xfs
+              (quota on XFS filesystem)
+
+       -f, --filesystem filesystem
+              Perform  specified  operations only for given filesystem (default is
+              to perform operations for all filesystems with quota).
+
+       -t, --edit-period
+              Edit the soft time limits for each filesystem.  In old quota  format
+              if   the   time   limits  are  zero,  the  default  time  limits  in
+              <linux/quota.h> are used. In new quota format time  limits  must  be
+              specified  (there  is no default value set in kernel). Time units of
+              'seconds', 'minutes', 'hours', and 'days' are understood. Time  lim‐
+              its  are  printed  in  the greatest possible time unit such that the
+              value is greater than or equal to one.
+
+       -T, --edit-times
+              Edit time for the user/group when softlimit  is  enforced.  Possible
+              values  are  'unset' or number and unit. Units are the same as in -t
+              option.
+
+FILES
+       aquota.user or aquota.group
+                           quota file at the filesystem  root  (version  2  quota,
+                           non-XFS filesystems)
+       quota.user or quota.group
+                           quota  file  at  the  filesystem root (version 1 quota,
+                           non-XFS filesystems)
+       /etc/mtab           mounted filesystems table
+
+SEE ALSO
+       quota(1),  vi(1),  quotactl(2),  quotacheck(8),  quotaon(8),   repquota(8),
+       setquota(8)
+
+
+
+                                                                        EDQUOTA(8)
+REPQUOTA(8)                   System Manager's Manual                  REPQUOTA(8)
+
+
+
+NAME
+       repquota - summarize quotas for a filesystem
+
+SYNOPSIS
+       /usr/sbin/repquota  [  -vspiug ] [ -c | -C ] [ -t | -n ] [ -F format-name ]
+       filesystem...
+
+       /usr/sbin/repquota [ -avtpsiug ] [ -c | -C ] [ -t | -n ] [ -F format-name ]
+
+DESCRIPTION
+       repquota prints a summary of the disc usage and quotas  for  the  specified
+       file  systems.   For  each  user  the current number of files and amount of
+       space (in kilobytes) is printed, along  with  any  quota  limits  set  with
+       edquota(8)  or setquota(8).  In the second column repquota prints two char‐
+       acters marking which limits are exceeded. If user is over his  space  soft‐
+       limit  or reaches his space hardlimit in case softlimit is unset, the first
+       character is '+'. Otherwise the character printed is '-'. The second  char‐
+       acter denotes the state of inode usage analogously.
+
+       repquota  has  to translate ids of all users/groups to names (unless option
+       -n was specified) so it may take a while to print all the  information.  To
+       make  translating  as fast as possible repquota tries to detect (by reading
+       /etc/nsswitch.conf) whether entries are stored in standard plain text  file
+       or  in  a  database and either translates chunks of 1024 names or each name
+       individually. You can override this autodetection by -c or -C options.
+
+OPTIONS
+       -a, --all
+              Report on all filesystems indicated in /etc/mtab  to  be  read-write
+              with quotas.
+
+       -v, --verbose
+              Report  all  quotas, even if there is no usage. Be also more verbose
+              about quotafile information.
+
+       -c, --cache
+              Cache entries to report and translate  uids/gids  to  names  in  big
+              chunks  by  scanning all users (default). This is good (fast) behav‐
+              iour when using /etc/passwd file.
+
+       -C, --no-cache
+              Translate individual entries. This is faster  when  you  have  users
+              stored in database.
+
+       -t, --truncate-names
+              Truncate  user/group names longer than 9 characters. This results in
+              nicer output when there are such names.
+
+       -n, --no-names
+              Don't resolve UIDs/GIDs to names. This can speedup printing a lot.
+
+       -s, --human-readable
+              Try to report used space, number of used inodes and limits  in  more
+              appropriate units than the default ones.
+
+       -p, --raw-grace
+              When  user  is  in  grace period, report time in seconds since epoch
+              when his grace time runs out (or has run out). Field is '0' when  no
+              grace  time  is  in  effect.  This is especially useful when parsing
+              output by a script.
+
+       -i, --no-autofs
+              Ignore mountpoints mounted by automounter.
+
+       -F, --format=format-name
+              Report quota for specified format (ie. don't perform format  autode‐
+              tection).   Possible  format names are: vfsold Original quota format
+              with 16-bit UIDs / GIDs, vfsv0 Quota format with 32-bit UIDs / GIDs,
+              64-bit  space usage, 32-bit inode usage and limits, vfsv1 Quota for‐
+              mat with 64-bit quota limits and usage, xfs (quota on  XFS  filesys‐
+              tem)
+
+       -g, --group
+              Report quotas for groups.
+
+       -u, --user
+              Report quotas for users. This is the default.
+
+       Only the super-user may view quotas which are not their own.
+
+FILES
+       aquota.user or aquota.group
+                           quota  file  at  the  filesystem root (version 2 quota,
+                           non-XFS filesystems)
+       quota.user or quota.group
+                           quota file at the filesystem  root  (version  1  quota,
+                           non-XFS filesystems)
+       /etc/mtab           default filesystems
+       /etc/passwd         default set of users
+       /etc/group          default set of groups
+
+SEE ALSO
+       quota(1), quotactl(2), edquota(8), quotacheck(8), quotaon(8), quota_nld(8),
+       setquota(8), warnquota(8)
+
+
+
+4th Berkeley Distribution                                              REPQUOTA(8)

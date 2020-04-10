@@ -1,0 +1,21 @@
+[Unit]
+Description= The Nginx Web Server and Proxy Server
+After=network.target
+
+
+[Service]
+Type=forking
+PIDFILE=/usr/local/nginx/logs/nginx.pid
+# Remove nginx.pid first when it exists there.
+# Make sure SELinux has been set enable access Nginx Web root.
+ExecStartPre=/usr/bin/rm -f /usr/local/nginx/logs/nginx.pid
+ExecStartPre=/usr/local/nginx/sbin/nginx -t
+ExecStart=/usr/local/nginx/sbin/nginx
+ExecReload=/bin/kill -s HUP $MAINPID
+KillSignal=SIGQUIT
+TimeoutStopSec=5
+KillMode=mixed
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
